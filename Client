@@ -1,0 +1,94 @@
+#include kasutatav teeg
+
+  #define leedi muutuja ning leedi väljundmoodulil
+//Seadistatakse töötaja nimi
+  int           TootajaState;
+  int           LastTöötajaState   = LOW;
+  int           LastDebounceTime  = 0;
+  int           DebounceDelay     = 50;
+  const String  TootajaNimi       = "TÖÖTAJA NIMI";
+
+  int           LEDState          = LOW;
+  unsigned long CurrMillis        = 0;
+  unsigned long PrevMillis        = 0;
+  unsigned long Interval          = 1000;
+  
+  char*       võrgu nimi muutuja = "võrgu nimi";      
+  char*       võrgu parooli muutuja = "võrgu parool";
+
+  IPAddress     TKDServer(Serveri IP aadress ühenduseks);
+  WiFiClient    TKDClient;
+
+  void setup() 
+  {        
+    Wire.begin(); 
+
+   Wire.setClock(TWI_FREQ);        
+   Serial.begin(pordi number);          
+    
+//Seadistatakse leedi väljundi 
+pinMode(mooduli väljundi nimi, OUTPUT);
+
+//Rakendatakse mooduli sisse ehitatud led füüsiliselt arusaamiseks, kas seade on saanud ühendust või mitte
+digitalWrite(LED0, !LOW);       
+    
+Serial.println("\nI/O Pins Modes Set .... Done"); 
+
+    WiFi.mode(WIFI_STA); //seadistatakse teatud WiFi moodulit, et ta saadaks signaali
+
+    WiFi.begin(võrgu nimi, võrguparool);
+
+    Serial.println("!--- Connecting To " + WiFi.SSID() + " ---!"); //prinditakse välja võrgu nimetus, millega ühendatakse
+
+    digitalWrite(LED0, !HIGH);
+    Serial.println("!-- Client Device Connected --!");
+
+   //Prinditakse välja vastuvõtja andmed
+    Serial.println("Connected To      : " + String(WiFi.SSID())); //võrgu minetus
+    Serial.println("Signal Strenght   : " + String(WiFi.RSSI()) + " dBm");//signaali tugevus
+    Serial.print  ("Server IP Address : ");
+    Serial.println(TKDServer); //vastuvõtja IP aadressi saamine
+    Serial.print  ("Device IP Address : ");
+    Serial.println(WiFi.localIP()); //saatja IP aadressi saamine
+    
+ }
+
+//tsükli funktsioonid
+  void loop() 
+  {
+ //kutsutakse välja valmistatud funktsiooni
+    CheckConnectivity(); 
+    TKDRequest();
+  }
+
+//luuakse funtsioon, mis kotrollib ühendust
+  void CheckConnectivity() 
+  {
+    while(ühendust ei saanud)
+    {
+      for(int i=0; i < 10; i++)
+      {
+//Pannakse leed vilkuma ja prinditakse välja mummu
+        digitalWrite(LED0, HIGH);
+        delay(250);
+        digitalWrite(LED0, LOW);
+        delay(250);
+        Serial.print(".");
+      }
+      Serial.println("");
+    }
+  }
+
+//luuakse teavituste saamise funktsiooni
+  void TKDRequest() 
+  {
+  //juhul kui saatja oli ühendatud millegiga, siis katkestatakse eelmist ühendust
+    TKDClient.stop(); 
+
+    if(on saanud ühendust)
+    { 
+      Serial.println    ("<" + TootajaNimi + "-CONNECTED>"); //prinditakse välja nimi, kes on saanud ühendust
+      TKDClient.println ("<" + TootajaNimi + "-CONNECTED>"); //prinditakse välja nimi, kes on saanud ühendust
+
+    }
+  }
