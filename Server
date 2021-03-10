@@ -16,42 +16,42 @@ RTC_reaalaja mooduli mudel ja tema muutuja;
   void setup()
   {
     Serial.begin(serial port töötajate kohal olekute jälgimiseks);          
-    Wire.begin(); reaalaja mooduli formaat
+    Wire.begin(); //reaalaja mooduli formaat
     
-    Seadistatakse kõik mooduliga ühendatud komponentide väljundid 
+    //Seadistatakse kõik mooduliga ühendatud komponentide väljundid 
     pinMode(mooduli väljundi nimi, OUTPUT);
         
-Kontroll lause, et kõik väljundid on seadistatud, ja valmis töötamiseks
+//Kontroll lause, et kõik väljundid on seadistatud, ja valmis töötamiseks
 
-   rtc.begin();seadistatakse reaalaja moodulit
+   rtc.begin(); //seadistatakse reaalaja moodulit
    rtc.adjust(sisestatakse, kas reaalaja mooduli seadistatakse käsitsi või automaatselt);
 
-  SetWifi(char* võrgu nimi muutuja, char* võrgu parooli muutuja) kutsume välja wifi seadistuse funktsiooni.
+  SetWifi(char* võrgu nimi muutuja, char* võrgu parooli muutuja) //kutsume välja wifi seadistuse funktsiooni.
     
   }
 
-  void loop() tsükli funktsioon
+  void loop() //tsükli funktsioon
   {
 
-    IsClients(); kutsume välja valmistatud funktsiooni
-    delay (number); antud viivitus aeg, et oleks mugavam jälgida töötajate järgi 
+    IsClients(); //kutsume välja valmistatud funktsiooni
+    delay (number); //antud viivitus aeg, et oleks mugavam jälgida töötajate järgi 
     
   }
 
   void SetWifi(char* võrgu nimi muutuja, char* võrgu parooli muutuja)
   {
-    WiFi.disconnect();  juhul kui saatja oli ühendatud millegiga, siis katkestatakse eelmist ühendust
+    WiFi.disconnect();  //juhul kui saatja oli ühendatud millegiga, siis katkestatakse eelmist ühendust
 
-    WiFi.mode(WIFI_AP_STA); seadistatakse WiFi moodulit, et ta võtaks signaalid vastu
+    WiFi.mode(WIFI_AP_STA); //seadistatakse WiFi moodulit, et ta võtaks signaalid vastu
 
-    WiFi.softAP( võrgu nimi muutuja, võrgu parooli muutuja); omandatakse vastuvõtja jaoks nimi ja parooli
+    WiFi.softAP( võrgu nimi muutuja, võrgu parooli muutuja); //omandatakse vastuvõtja jaoks nimi ja parooli
 
-    IPAddress IP = WiFi.softAPIP(); seadistatakse vastuvõtja jaoks IP aadress
+    IPAddress IP = WiFi.softAPIP(); //seadistatakse vastuvõtja jaoks IP aadress
 
-    TKDServer.begin(); käivitatakse valmis vastuvõtja
+    TKDServer.begin(); //käivitatakse valmis vastuvõtja
   }
 
-  void IsClients() funktsiooni nimetus
+  void IsClients() //funktsiooni nimetus
   {
 
  boolean muutuja, kus on võrgu nimi ja parool = WiFi.softAP(võrgu nimi, võrguparool);
