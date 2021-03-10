@@ -1,0 +1,80 @@
+//Kood ei ole käivitatav, tuleb hoolikalt koodi ülelugeda 
+//ja asendada abi sõnad vastavalt koodiga või muutujatega
+
+#include kasutatav teeg
+
+  #define leedi muutuja ning leedi väljundmoodulil
+
+  const char*       võrgu nimi muutuja = "võrgu nimi";      
+  const char*       võrgu parooli muutuja = "võrgu parool";
+
+  WiFiServer  TKDServer(vastuvõtja pordi number);
+  WiFiClient  TKDClient[number]; maksimaalse töötajate arv
+
+RTC_reaalaja mooduli mudel ja tema muutuja;                    
+
+  void setup()
+  {
+    Serial.begin(serial port töötajate kohal olekute jälgimiseks);          
+    Wire.begin(); reaalaja mooduli formaat
+    
+    Seadistatakse kõik mooduliga ühendatud komponentide väljundid 
+    pinMode(mooduli väljundi nimi, OUTPUT);
+        
+Kontroll lause, et kõik väljundid on seadistatud, ja valmis töötamiseks
+
+   rtc.begin();seadistatakse reaalaja moodulit
+   rtc.adjust(sisestatakse, kas reaalaja mooduli seadistatakse käsitsi või automaatselt);
+
+  SetWifi(char* võrgu nimi muutuja, char* võrgu parooli muutuja) kutsume välja wifi seadistuse funktsiooni.
+    
+  }
+
+  void loop() tsükli funktsioon
+  {
+
+    IsClients(); kutsume välja valmistatud funktsiooni
+    delay (number); antud viivitus aeg, et oleks mugavam jälgida töötajate järgi 
+    
+  }
+
+  void SetWifi(char* võrgu nimi muutuja, char* võrgu parooli muutuja)
+  {
+    WiFi.disconnect();  juhul kui saatja oli ühendatud millegiga, siis katkestatakse eelmist ühendust
+
+    WiFi.mode(WIFI_AP_STA); seadistatakse WiFi moodulit, et ta võtaks signaalid vastu
+
+    WiFi.softAP( võrgu nimi muutuja, võrgu parooli muutuja); omandatakse vastuvõtja jaoks nimi ja parooli
+
+    IPAddress IP = WiFi.softAPIP(); seadistatakse vastuvõtja jaoks IP aadress
+
+    TKDServer.begin(); käivitatakse valmis vastuvõtja
+  }
+
+  void IsClients() funktsiooni nimetus
+  {
+
+ boolean muutuja, kus on võrgu nimi ja parool = WiFi.softAP(võrgu nimi, võrguparool);
+    if(muutuja on õige)
+    {
+if(TKDServer.hasClient())
+   {
+      WiFiClient TKDClient = TKDServer.available();
+
+    if(klient on ühendatud)
+    {
+	//Prindi välja: 
+//Kuupäeva.
+//Kellaaja.
+//Kliendi sõnumi, ehk töötaja nimi.
+//Kliendi füüsiliseks ühenduse tuvastamiseks pane moodulil oleva leedi põlema.
+	//Pane valgusfooride jaks esimene reziim tööle.
+       
+    }
+   }else //kui ei saanud mitte kellegiga ühendust.
+   {
+   // Pane valgusfooride jaks teine reziim tööle.
+//Kliendi füüsiliseks ühenduse tuvastamiseks moodulil oleva leediga ei tee midagi, ehk las leed vilgub, kuni järgmise ühenduse saamiseni.
+    }
+    }
+  }
