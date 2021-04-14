@@ -304,12 +304,12 @@ if(TKDServer.hasClient())
     delay(500);
   }
   void VF_G1_tuhi(){
-    digitalWrite(R, LOW);
+    digitalWrite(R, HIGH);
     digitalWrite(Y, LOW);
-    digitalWrite(G, HIGH);
-    digitalWrite(R1, HIGH);
+    digitalWrite(G, LOW);
+    digitalWrite(R1, LOW);
     digitalWrite(Y1, LOW);
-    digitalWrite(G1, LOW);
+    digitalWrite(G1, HIGH);
     delay(500);
   }
 
