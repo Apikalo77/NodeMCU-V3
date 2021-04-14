@@ -9,7 +9,7 @@
   const char*       võrgu parooli muutuja = "võrgu parool";
 
   WiFiServer  TKDServer(vastuvõtja pordi number);
-  WiFiClient  TKDClient[number]; maksimaalse töötajate arv
+  WiFiClient  TKDClient[number]; // Määratakse maksimaalse saatjate arvu, mis kuvatakse jälgimis monitooringul
 
 RTC_reaalaja mooduli mudel ja tema muutuja;                    
 
