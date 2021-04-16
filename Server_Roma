@@ -1,353 +1,366 @@
-//-- Libraries Included --------------------------------------------------------------
-  #include <ESP8266WiFi.h>
-  #include <Wire.h>
-  #include <RTClib.h>                         // Подключаем библиотеку Wire
-//------------------------------------------------------------------------------------
-  // Define I/O Pins
-  #define     LED0      2           // WIFI Module LED
-  #define     R         D0          // Connectivity With Client #1
-  #define     G         D3          // Connectivity With Client #2
-  #define     Y         D4          // Connectivity ReInitiate Button
-  #define     R1        D5          // Connectivity With Client #1
-  #define     Y1        D6          // Connectivity With Client #2
-  #define     G1        D7          // Connectivity ReInitiate Button
-//------------------------------------------------------------------------------------
-  // Authentication Variables
-  const char*       TKDssid = "ESPsoftAP_01";              // SERVER WIFI NAME
-  const char*       TKDpassword = "pass0077";          // SERVER PASSWORD
-//------------------------------------------------------------------------------------
- WiFiServer  TKDServer(9001);      // THE SERVER AND THE PORT NUMBER
- WiFiClient  TKDClient[200];     // THE SERVER CLIENTS
-//====================================================================================
-RTC_DS3231 rtc;                     // Создаем объект rtc
+// Lisatakse teatud teegi
+#include <ESP8266WiFi.h>
+#include <Wire.h>
+#include <RTClib.h>
 
-  void setup()
+// Defineeritakse väljundid
+#define     LED0      2
+#define     R         D0
+#define     G         D3
+#define     Y         D4
+#define     R1        D5
+#define     Y1        D6
+#define     G1        D7
+
+const char*       TKDssid = "ESPsoftAP_01";              // Luuakse Serveri WiFi nimi
+const char*       TKDpassword = "pass0077";          // Luuakse Serveri parool
+
+WiFiServer  TKDServer(9001);      // Määratakse serveri pordi
+WiFiClient  TKDClient[200];     // Määratakse maksimaalse saatjate
+//arvu, mis kuvab jälgimis monitooringul
+
+RTC_DS3231 rtc;                     // Luuakse rtc objekti
+
+  //Luuakse muutujad valgufoori ooteaega seadistamiseks
+  int MolemadPunasedPikk;
+  int MolemadPunasedLuhike;
+  int MolemadRohelised;
+  int MolemadPunasedTuhi;
+  int MolemadRohelisedTuhi;
+
+void setup()
+{
+  // Seadistatakse Serial Pordi
+  Serial.begin(115200);
+  Wire.begin();                   // Kasutatakse, et Serial Pordile ei tuleks ette tundmatuid sümboleid
+
+  // Seadistatakse väljundid
+  pinMode(LED0, OUTPUT);
+  pinMode(D0, OUTPUT);
+  pinMode(D3, OUTPUT);
+  pinMode(D4, OUTPUT);
+  pinMode(D5, OUTPUT);
+  pinMode(D6, OUTPUT);
+  pinMode(D7, OUTPUT);
+
+  // Prinditakse välja kiri, et seade läks tööle
+  Serial.println();
+  Serial.println("I/O Pins Modes Set .... Done");
+
+  // Seadistatakse automaatne kellaeg
+  rtc.begin();
+  rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+
+  // WiFi seadistamine
+  SetWifi("ESPsoftAP_01", "");
+
+}
+
+void loop()
+{
+  //Kutsutakse välja funktsiooni.
+  //Seadestatakse valgusfoori ooteaega,
+  //kui objektil käib töö.
+
+  MolemadPunasedPikk = 3000;
+  MolemadPunasedLuhike = 2000;
+  MolemadRohelised = 1000;
+
+  //Seadestatakse valgusfoori ooteaega,
+  //kui objektil ei ole kedagi.
+
+  MolemadPunasedTuhi = 1000;
+  MolemadRohelisedTuhi = 1000;
+
+  IsClients();
+
+}
+
+void SetWifi(char* TKDssid, char* TKDpassword)
+{
+  // Kõikide eelmise protsesside peatamine
+  WiFi.disconnect();
+
+  // Seadistatakse WiFi režiimi
+  WiFi.mode(WIFI_AP_STA);
+  Serial.println("WIFI Mode : AccessPoint Station");
+
+  // WiFi tööle rakendamine
+  WiFi.softAP(TKDssid, TKDpassword);
+  Serial.println("WIFI < " + String(TKDssid) + " > ... Started");
+
+  delay(1000);
+
+  // Serveri IP aadressi saamine
+  IPAddress IP = WiFi.softAPIP();
+
+  // Prinditakse Serveri IP Aadress
+  Serial.print("AccessPoint IP : ");
+  Serial.println(IP);
+
+  // Serveri käivitamine
+  TKDServer.begin();
+  Serial.println("Server Started");
+}
+
+void IsClients()
+{
+
+  //kontrollitakse kliendilt WiFi parooli, kui kõik klappib,
+  //siis saab edasi tsüklile
+  boolean result = WiFi.softAP(TKDssid, TKDpassword);
+  if (result == true)
   {
-    // Setting The Serial Port
-    Serial.begin(115200);           // Computer Communication
-    Wire.begin();                   // chtobq nebqlo "165:165:85"
-    
-    // Setting The Mode Of Pins
-    pinMode(LED0, OUTPUT);          // WIFI OnBoard LED Light
-    pinMode(D0, OUTPUT);          // Indicator For Client #1 Connectivity
-    pinMode(D3, OUTPUT);          // Indicator For Client #2 Connectivity
-    pinMode(D4, OUTPUT);          // Indicator For Client #2 Connectivity
-    pinMode(D5, OUTPUT);          // Indicator For Client #1 Connectivity
-    pinMode(D6, OUTPUT);          // Indicator For Client #2 Connectivity
-    pinMode(D7, OUTPUT);          // Indicator For Client #2 Connectivity
-    
-    // Print Message Of I/O Setting Progress
-    Serial.println();
-    Serial.println("I/O Pins Modes Set .... Done");
-
-     // Автоматическая установка времени при загрузке скетча
-   rtc.begin();
-   rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
-
-  // Ручная установка времени
-   //rtc.adjust(DateTime(2020, 03, 13, 14, 0, 0));
-
-    // Setting Up A Wifi Access Point
-    SetWifi("ESPsoftAP_01", "");
-    
-  }
-
-//====================================================================================
-  
-  void loop()
-  {
-
-    IsClients();
-    //delay (5000);
-    
-  }
-
-//====================================================================================
-  
-  void SetWifi(char* TKDssid, char* TKDpassword)
-  {
-    // Stop Any Previous WIFI
-    WiFi.disconnect();
-
-    // Setting The Wifi Mode
-    WiFi.mode(WIFI_AP_STA);
-    Serial.println("WIFI Mode : AccessPoint Station");
-       
-    // Starting The Access Point
-    WiFi.softAP(TKDssid, TKDpassword);
-    Serial.println("WIFI < " + String(TKDssid) + " > ... Started");
-    
-    // Wait For Few Seconds
-    delay(1000);
-    
-    // Getting Server IP
-    IPAddress IP = WiFi.softAPIP();
-    
-    // Printing The Server IP Address
-    Serial.print("AccessPoint IP : ");
-    Serial.println(IP);
-
-    // Starting Server
-    TKDServer.begin();
-    Serial.println("Server Started");
-  }
-
-//====================================================================================
-
-  void IsClients()
-  {
-
- //kontrollitakse kliendilt WiFi parooli, kui kõik klappib, 
- //siis saab edasi tsüklile 
- boolean result = WiFi.softAP(TKDssid, TKDpassword);
-    if(result == true)
+    if (TKDServer.hasClient())
     {
-if(TKDServer.hasClient())
-   {
       WiFiClient TKDClient = TKDServer.available();
 
-    if(TKDClient.available())
-    {
+      if (TKDClient.available())
+      {
 
-      String Message = TKDClient.readStringUntil('\r');
-          // Here We Print The Message On The Screen
-          DateTime now = rtc.now();
-  Serial.print(now.day(), DEC);       // Отправка в Serial Port дня
-  Serial.print('/');                  // Отправка текста в Serial Port 
-  Serial.print(now.month(), DEC);     // Отправка в Serial Port месяц 
-  Serial.print('/');                  // Отправка текста в Serial Port
-  Serial.print(now.year(), DEC);      // Отправка в Serial Port год 
-  Serial.print(' ');                  // Отправка текста в Serial Port
-  Serial.print(now.hour(), DEC);      // Отправка в Serial Port час
-  Serial.print(':');                  // Отправка текста в Serial Port
-  Serial.print(now.minute(), DEC);    // Отправка в Serial Port минуты
-  Serial.print(' ');                  // Отправка текста в Serial Port
-  Serial.print('-');                  // Отправка текста в Serial Port
-  Serial.print(' ');                  // Отправка текста в Serial Port
-  Serial.println(Message);
-          // Here We Reply To The Client With A Message
-          TKDClient.print("\nWe Got Your Message");
-          TKDClient.flush();
-          
-      Molemad_R_Pikk();
-      VF_R_Y();
-      VF_G();
-      VF_G_Vilgub();
-      VF_Y();
-      Molemad_R_Luhike();
-      VF1_R1_Y1();
-      VF1_G1();
-      VF1_G1_Vilgub();
-      VF1_Y1();
-      }
-    }
-   else{
-        Molemad_R_Tuhi();
+        String Message = TKDClient.readStringUntil('\r');
+        // Prinditakse välja kirja Serial Pordile
+        DateTime now = rtc.now();
+        Serial.print(now.day(), DEC);
+        Serial.print('/');
+        Serial.print(now.month(), DEC);
+        Serial.print('/');
+        Serial.print(now.year(), DEC);
+        Serial.print(' ');
+        Serial.print(now.hour(), DEC);
+        Serial.print(':');
+        Serial.print(now.minute(), DEC);
+        Serial.print(' ');
+        Serial.print('-');
+        Serial.print(' ');
+        Serial.println(Message);
+        // Kliendile vastamine Serveri poolt, et sõnum tuli kohale
+        TKDClient.print("\nWe Got Your Message");
+        TKDClient.flush();
+
+        // Ehitatakse kahe valgusfoori algoritm, ning kutsutakse välja funktsioonid
+
+        Molemad_R_Pikk();
         VF_R_Y();
-        VF_G_tuhi();
+        VF_G();
         VF_G_Vilgub();
         VF_Y();
-        Molemad_R_Tuhi();
+        Molemad_R_Luhike();
         VF1_R1_Y1();
-        VF_G1_tuhi();
+        VF1_G1();
         VF1_G1_Vilgub();
         VF1_Y1();
+      }
+    } else
+    {
+      Molemad_R_Tuhi();
+      VF_R_Y();
+      VF_G_tuhi();
+      VF_G_Vilgub();
+      VF_Y();
+      Molemad_R_Tuhi();
+      VF1_R1_Y1();
+      VF1_G1_tuhi();
+      VF1_G1_Vilgub();
+      VF1_Y1();
     }
-   }
   }
+}
 
-  //Seaded mõlema valgufooriks mis ei muutu
-    
-  void VF_R_Y(){
-    digitalWrite(R, HIGH);
-    digitalWrite(Y, HIGH);
-    digitalWrite(G, LOW);
-    digitalWrite(R1, HIGH);
-    digitalWrite(Y1, LOW);
-    digitalWrite(G1, LOW);
-    delay(500);
-  }
-  void VF_G_Vilgub(){
-    digitalWrite(R, LOW);
-    digitalWrite(Y, LOW);
-    digitalWrite(G, LOW);
-    digitalWrite(R1, HIGH);
-    digitalWrite(Y1, LOW);
-    digitalWrite(G1, LOW);
-    delay(250);
-    digitalWrite(R, LOW);
-    digitalWrite(Y, LOW);
-    digitalWrite(G, HIGH);
-    digitalWrite(R1, HIGH);
-    digitalWrite(Y1, LOW);
-    digitalWrite(G1, LOW);
-    delay(250);
-    digitalWrite(R, LOW);
-    digitalWrite(Y, LOW);
-    digitalWrite(G, LOW);
-    digitalWrite(R1, HIGH);
-    digitalWrite(Y1, LOW);
-    digitalWrite(G1, LOW);
-    delay(250);
-    digitalWrite(R, LOW);
-    digitalWrite(Y, LOW);
-    digitalWrite(G, HIGH);
-    digitalWrite(R1, HIGH);
-    digitalWrite(Y1, LOW);
-    digitalWrite(G1, LOW);
-    delay(250);
-    digitalWrite(R, LOW);
-    digitalWrite(Y, LOW);
-    digitalWrite(G, LOW);
-    digitalWrite(R1, HIGH);
-    digitalWrite(Y1, LOW);
-    digitalWrite(G1, LOW);
-    delay(250);
-    digitalWrite(R, LOW);
-    digitalWrite(Y, LOW);
-    digitalWrite(G, HIGH);
-    digitalWrite(R1, HIGH);
-    digitalWrite(Y1, LOW);
-    digitalWrite(G1, LOW);
-    delay(250);
-  }
-  void VF_Y() {
-    digitalWrite(R, LOW);
-    digitalWrite(Y, HIGH);
-    digitalWrite(G, LOW);
-    digitalWrite(R1, HIGH);
-    digitalWrite(Y1, LOW);
-    digitalWrite(G1, LOW);
-    delay(500);
-  }
-  void VF1_R1_Y1() {
-    digitalWrite(R, HIGH);
-    digitalWrite(Y, LOW);
-    digitalWrite(G, LOW);
-    digitalWrite(R1, HIGH);
-    digitalWrite(Y1, HIGH);
-    digitalWrite(G1, LOW);
-    delay(500);
-  }
-  void VF1_G1_Vilgub() {
-    digitalWrite(R, HIGH);
-    digitalWrite(Y, LOW);
-    digitalWrite(G, LOW);
-    digitalWrite(R1, LOW);
-    digitalWrite(Y1, LOW);
-    digitalWrite(G1, LOW);
-    delay(250);
-    digitalWrite(R, HIGH);
-    digitalWrite(Y, LOW);
-    digitalWrite(G, LOW);
-    digitalWrite(R1, LOW);
-    digitalWrite(Y1, LOW);
-    digitalWrite(G1, HIGH);
-    delay(250);
-    digitalWrite(R, HIGH);
-    digitalWrite(Y, LOW);
-    digitalWrite(G, LOW);
-    digitalWrite(R1, LOW);
-    digitalWrite(Y1, LOW);
-    digitalWrite(G1, LOW);
-    delay(250);
-    digitalWrite(R, HIGH);
-    digitalWrite(Y, LOW);
-    digitalWrite(G, LOW);
-    digitalWrite(R1, LOW);
-    digitalWrite(Y1, LOW);
-    digitalWrite(G1, HIGH);
-    delay(250);
-    digitalWrite(R, HIGH);
-    digitalWrite(Y, LOW);
-    digitalWrite(G, LOW);
-    digitalWrite(R1, LOW);
-    digitalWrite(Y1, LOW);
-    digitalWrite(G1, LOW);
-    delay(250);
-    digitalWrite(R, HIGH);
-    digitalWrite(Y, LOW);
-    digitalWrite(G, LOW);
-    digitalWrite(R1, LOW);
-    digitalWrite(Y1, LOW);
-    digitalWrite(G1, HIGH);
-    delay(250);
-  }
-  void VF1_Y1() {
-    digitalWrite(R, HIGH);
-    digitalWrite(Y, LOW);
-    digitalWrite(G, LOW);
-    digitalWrite(R1, LOW);
-    digitalWrite(Y1, HIGH);
-    digitalWrite(G1, LOW);
-    delay(500);
-  }
+//Luuakse eraldi valgusfoori funktsioonid, et hiljem oleks lihtsam nendest luua valgusfoori algoritmi
 
-  // Seaded tühja objektiks
-  
-  void Molemad_R_Tuhi(){
-    digitalWrite(R, HIGH);
-    digitalWrite(Y, LOW);
-    digitalWrite(G, LOW);
-    digitalWrite(R1, HIGH);
-    digitalWrite(Y1, LOW);
-    digitalWrite(G1, LOW);
-    delay(1000);
-  }
-  void VF_G_tuhi(){
-    digitalWrite(R, LOW);
-    digitalWrite(Y, LOW);
-    digitalWrite(G, HIGH);
-    digitalWrite(R1, HIGH);
-    digitalWrite(Y1, LOW);
-    digitalWrite(G1, LOW);
-    delay(500);
-  }
-  void VF_G1_tuhi(){
-    digitalWrite(R, HIGH);
-    digitalWrite(Y, LOW);
-    digitalWrite(G, LOW);
-    digitalWrite(R1, LOW);
-    digitalWrite(Y1, LOW);
-    digitalWrite(G1, HIGH);
-    delay(500);
-  }
+//Luuakse funktsioonid mõlema valgufooriks, mis ei muutu
 
-  // Seaded täis objektiks
+void VF_R_Y() {
+  digitalWrite(R, HIGH);
+  digitalWrite(Y, HIGH);
+  digitalWrite(G, LOW);
+  digitalWrite(R1, HIGH);
+  digitalWrite(Y1, LOW);
+  digitalWrite(G1, LOW);
+  delay(500);
+}
+void VF_G_Vilgub() {
+  digitalWrite(R, LOW);
+  digitalWrite(Y, LOW);
+  digitalWrite(G, LOW);
+  digitalWrite(R1, HIGH);
+  digitalWrite(Y1, LOW);
+  digitalWrite(G1, LOW);
+  delay(250);
+  digitalWrite(R, LOW);
+  digitalWrite(Y, LOW);
+  digitalWrite(G, HIGH);
+  digitalWrite(R1, HIGH);
+  digitalWrite(Y1, LOW);
+  digitalWrite(G1, LOW);
+  delay(250);
+  digitalWrite(R, LOW);
+  digitalWrite(Y, LOW);
+  digitalWrite(G, LOW);
+  digitalWrite(R1, HIGH);
+  digitalWrite(Y1, LOW);
+  digitalWrite(G1, LOW);
+  delay(250);
+  digitalWrite(R, LOW);
+  digitalWrite(Y, LOW);
+  digitalWrite(G, HIGH);
+  digitalWrite(R1, HIGH);
+  digitalWrite(Y1, LOW);
+  digitalWrite(G1, LOW);
+  delay(250);
+  digitalWrite(R, LOW);
+  digitalWrite(Y, LOW);
+  digitalWrite(G, LOW);
+  digitalWrite(R1, HIGH);
+  digitalWrite(Y1, LOW);
+  digitalWrite(G1, LOW);
+  delay(250);
+  digitalWrite(R, LOW);
+  digitalWrite(Y, LOW);
+  digitalWrite(G, HIGH);
+  digitalWrite(R1, HIGH);
+  digitalWrite(Y1, LOW);
+  digitalWrite(G1, LOW);
+  delay(250);
+}
+void VF_Y() {
+  digitalWrite(R, LOW);
+  digitalWrite(Y, HIGH);
+  digitalWrite(G, LOW);
+  digitalWrite(R1, HIGH);
+  digitalWrite(Y1, LOW);
+  digitalWrite(G1, LOW);
+  delay(500);
+}
+void VF1_R1_Y1() {
+  digitalWrite(R, HIGH);
+  digitalWrite(Y, LOW);
+  digitalWrite(G, LOW);
+  digitalWrite(R1, HIGH);
+  digitalWrite(Y1, HIGH);
+  digitalWrite(G1, LOW);
+  delay(500);
+}
+void VF1_G1_Vilgub() {
+  digitalWrite(R, HIGH);
+  digitalWrite(Y, LOW);
+  digitalWrite(G, LOW);
+  digitalWrite(R1, LOW);
+  digitalWrite(Y1, LOW);
+  digitalWrite(G1, LOW);
+  delay(250);
+  digitalWrite(R, HIGH);
+  digitalWrite(Y, LOW);
+  digitalWrite(G, LOW);
+  digitalWrite(R1, LOW);
+  digitalWrite(Y1, LOW);
+  digitalWrite(G1, HIGH);
+  delay(250);
+  digitalWrite(R, HIGH);
+  digitalWrite(Y, LOW);
+  digitalWrite(G, LOW);
+  digitalWrite(R1, LOW);
+  digitalWrite(Y1, LOW);
+  digitalWrite(G1, LOW);
+  delay(250);
+  digitalWrite(R, HIGH);
+  digitalWrite(Y, LOW);
+  digitalWrite(G, LOW);
+  digitalWrite(R1, LOW);
+  digitalWrite(Y1, LOW);
+  digitalWrite(G1, HIGH);
+  delay(250);
+  digitalWrite(R, HIGH);
+  digitalWrite(Y, LOW);
+  digitalWrite(G, LOW);
+  digitalWrite(R1, LOW);
+  digitalWrite(Y1, LOW);
+  digitalWrite(G1, LOW);
+  delay(250);
+  digitalWrite(R, HIGH);
+  digitalWrite(Y, LOW);
+  digitalWrite(G, LOW);
+  digitalWrite(R1, LOW);
+  digitalWrite(Y1, LOW);
+  digitalWrite(G1, HIGH);
+  delay(250);
+}
+void VF1_Y1() {
+  digitalWrite(R, HIGH);
+  digitalWrite(Y, LOW);
+  digitalWrite(G, LOW);
+  digitalWrite(R1, LOW);
+  digitalWrite(Y1, HIGH);
+  digitalWrite(G1, LOW);
+  delay(500);
+}
 
-  void Molemad_R_Pikk(){
-    digitalWrite(R, HIGH);
-    digitalWrite(Y, LOW);
-    digitalWrite(G, LOW);
-    digitalWrite(R1, HIGH);
-    digitalWrite(Y1, LOW);
-    digitalWrite(G1, LOW);
-    delay(3000);
-  }   
-  void Molemad_R_Luhike(){
-    digitalWrite(R, HIGH);
-    digitalWrite(Y, LOW);
-    digitalWrite(G, LOW);
-    digitalWrite(R1, HIGH);
-    digitalWrite(Y1, LOW);
-    digitalWrite(G1, LOW);
-    delay(2000);
-  }
-  void VF1_G1() {
-    digitalWrite(R, HIGH);
-    digitalWrite(Y, LOW);
-    digitalWrite(G, LOW);
-    digitalWrite(R1, LOW);
-    digitalWrite(Y1, LOW);
-    digitalWrite(G1, HIGH);
-    delay(1000);
-  }
-  void VF_G(){
-    digitalWrite(R, LOW);
-    digitalWrite(Y, LOW);
-    digitalWrite(G, HIGH);
-    digitalWrite(R1, HIGH);
-    digitalWrite(Y1, LOW);
-    digitalWrite(G1, LOW);
-    delay(1000);
-  }
+// Luuakse funktsioonid, kui objektil ei ole kedagi
+
+void Molemad_R_Tuhi() {
+  digitalWrite(R, HIGH);
+  digitalWrite(Y, LOW);
+  digitalWrite(G, LOW);
+  digitalWrite(R1, HIGH);
+  digitalWrite(Y1, LOW);
+  digitalWrite(G1, LOW);
+  delay(MolemadPunasedTuhi);
+}
+void VF_G_tuhi() {
+  digitalWrite(R, LOW);
+  digitalWrite(Y, LOW);
+  digitalWrite(G, HIGH);
+  digitalWrite(R1, HIGH);
+  digitalWrite(Y1, LOW);
+  digitalWrite(G1, LOW);
+  delay(MolemadRohelisedTuhi);
+}
+void VF1_G1_tuhi() {
+  digitalWrite(R, HIGH);
+  digitalWrite(Y, LOW);
+  digitalWrite(G, LOW);
+  digitalWrite(R1, LOW);
+  digitalWrite(Y1, LOW);
+  digitalWrite(G1, HIGH);
+  delay(MolemadRohelisedTuhi);
+}
+
+// Luuakse funktsioonid, kui objektil käib töö
+
+void Molemad_R_Pikk() {
+  digitalWrite(R, HIGH);
+  digitalWrite(Y, LOW);
+  digitalWrite(G, LOW);
+  digitalWrite(R1, HIGH);
+  digitalWrite(Y1, LOW);
+  digitalWrite(G1, LOW);
+  delay(MolemadPunasedPikk);
+}
+void Molemad_R_Luhike() {
+  digitalWrite(R, HIGH);
+  digitalWrite(Y, LOW);
+  digitalWrite(G, LOW);
+  digitalWrite(R1, HIGH);
+  digitalWrite(Y1, LOW);
+  digitalWrite(G1, LOW);
+  delay(MolemadPunasedLuhike);
+}
+void VF1_G1() {
+  digitalWrite(R, HIGH);
+  digitalWrite(Y, LOW);
+  digitalWrite(G, LOW);
+  digitalWrite(R1, LOW);
+  digitalWrite(Y1, LOW);
+  digitalWrite(G1, HIGH);
+  delay(MolemadRohelised);
+}
+void VF_G() {
+  digitalWrite(R, LOW);
+  digitalWrite(Y, LOW);
+  digitalWrite(G, HIGH);
+  digitalWrite(R1, HIGH);
+  digitalWrite(Y1, LOW);
+  digitalWrite(G1, LOW);
+  delay(MolemadRohelised);
+}
