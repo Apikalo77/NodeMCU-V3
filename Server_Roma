@@ -53,7 +53,7 @@ void setup()
 
   // WiFi seadistamine
   SetWifi("ESPsoftAP_01", "");
-
+  
 }
 
 void loop()
